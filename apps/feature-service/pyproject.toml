@@ -1,0 +1,29 @@
+# =============================================================================
+# FEATURE SERVICE - pyproject.toml
+# =============================================================================
+
+[tool.poetry]
+name = "feature-service"
+version = "1.0.0"
+description = "Feature extraction microservice for Cyberbullying NLP"
+authors = ["Cyberbullying Prediction Team"]
+
+packages = [{ include = "feature_service" }]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "^0.109.0"
+uvicorn = { version = "^0.27.0", extras = ["standard"] }
+pydantic = "^2.5.0"
+numpy = "^1.26.0"
+
+# Shared packages
+cyberbullying-shared-common = { path = "../../packages/shared-common" }
+cyberbullying-data-models = { path = "../../packages/data-models" }
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

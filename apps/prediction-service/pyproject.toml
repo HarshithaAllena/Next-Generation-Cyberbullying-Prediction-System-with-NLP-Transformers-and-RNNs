@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "prediction-service"
+version = "1.0.0"
+description = "Prediction microservice for Cyberbullying NLP"
+authors = ["Cyberbullying Prediction Team"]
+
+packages = [{ include = "prediction_service" }]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "^0.109.0"
+uvicorn = { version = "^0.27.0", extras = ["standard"] }
+pydantic = "^2.5.0"
+
+cyberbullying-shared-common = { path = "../../packages/shared-common" }
+cyberbullying-data-models = { path = "../../packages/data-models" }
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
