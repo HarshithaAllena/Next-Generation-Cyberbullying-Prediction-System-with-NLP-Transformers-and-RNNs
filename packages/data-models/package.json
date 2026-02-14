@@ -1,0 +1,148 @@
+{
+  /*
+  =============================================================================
+  DATA MODELS PACKAGE
+  =============================================================================
+  Purpose: Defines shared Pydantic schemas and TypeScript interfaces for the
+  entire monorepo. These data models ensure type safety and validation across
+  all services.
+  
+  Key Concepts:
+  - Pydantic: Python data validation using type annotations
+  - TypeScript interfaces: Shared types for services
+  - Serialization: JSON schemas for API communication
+  
+  Architecture:
+  - src/schemas/: Pydantic models for Python services
+  - src/types/: TypeScript interfaces for Node.js services
+  - src/validators/: Custom validation logic
+  - src/serializers/: Conversion between formats
+  
+  Author: Cyberbullying Prediction Team
+  Version: 1.0.0
+  =============================================================================
+  */
+  "name": "@cyberbullying/data-models",
+  "version": "1.0.0",
+  "description": "Shared data models and schemas for the Cyberbullying Prediction System",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./schemas": {
+      "import": "./dist/schemas/index.mjs",
+      "require": "./dist/schemas/index.js",
+      "types": "./dist/schemas/index.d.ts"
+    },
+    "./types": {
+      "import": "./dist/types/index.mjs",
+      "require": "./dist/types/index.js",
+      "types": "./dist/types/index.d.ts"
+    }
+  },
+  "scripts": {
+    /*
+    =============================================================================
+    BUILD SCRIPTS
+    =============================================================================
+    Compiles TypeScript to JavaScript for distribution.
+    Generates .js, .d.ts, and .mjs files.
+    =============================================================================
+    */
+    "build": "tsc -b",
+    "dev": "tsc -b --watch",
+    "clean": "rm -rf dist",
+    
+    /*
+    =============================================================================
+    TESTING SCRIPTS
+    =============================================================================
+    Unit tests for data model validation and serialization.
+    =============================================================================
+    */
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    
+    /*
+    =============================================================================
+    CODE QUALITY SCRIPTS
+    =============================================================================
+    Linting and type checking for this package.
+    =============================================================================
+    */
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    /*
+    =============================================================================
+    CORE DEPENDENCIES
+    =============================================================================
+    Pydantic: Data validation library used in Python services.
+    Zod: TypeScript-first schema validation.
+    =============================================================================
+    */
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    /*
+    =============================================================================
+    BUILD AND TEST DEPENDENCIES
+    =============================================================================
+    TypeScript and Jest for this package.
+    =============================================================================
+    */
+    "typescript": "^5.3.3",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.2",
+    "@types/jest": "^29.5.12"
+  },
+  "peerDependencies": {
+    /*
+    =============================================================================
+    PEER DEPENDENCIES
+    =============================================================================
+    Packages that consumers must install themselves.
+    Ensures version consistency across monorepo.
+    =============================================================================
+    */
+    "zod": "^3.22.4"
+  },
+  "engines": {
+    /*
+    =============================================================================
+    NODE VERSION REQUIREMENT
+    =============================================================================
+    Requires Node.js 20.x for modern features.
+    =============================================================================
+    */
+    "node": ">=20.11.0"
+  },
+  /*
+  =============================================================================
+  FILES INCLUDED IN PACKAGE
+  =============================================================================
+  Only include source files, exclude tests and config.
+  =============================================================================
+  */
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "cyberbullying",
+    "nlp",
+    "machine-learning",
+    "data-models",
+    "schemas",
+    "validation"
+  ],
+  "author": "Cyberbullying Prediction Team",
+  "license": "MIT"
+}

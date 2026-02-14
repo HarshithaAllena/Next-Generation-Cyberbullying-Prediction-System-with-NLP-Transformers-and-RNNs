@@ -1,0 +1,102 @@
+# =============================================================================
+# SHARED COMMON PACKAGE - pyproject.toml
+# =============================================================================
+# Purpose: Python package configuration for shared-common library.
+# This package contains utilities shared across all microservices.
+#
+# Dependencies:
+# - pydantic: Data validation and settings management
+# - python-dotenv: Environment variable loading
+# - structlog: Structured logging
+# - tenacity: Retry logic
+# - functools: Utility decorators
+#
+# Author: Cyberbullying Prediction Team
+# Version: 1.0.0
+# =============================================================================
+
+[tool.poetry]
+name = "cyberbullying-shared-common"
+version = "1.0.0"
+description = "Shared utilities, decorators, and helpers for Cyberbullying NLP services"
+authors = ["Cyberbullying Prediction Team <team@example.com>"]
+license = "MIT"
+readme = "README.md"
+keywords = ["cyberbullying", "nlp", "utilities", "common"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+]
+
+# =============================================================================
+# PACKAGE CONFIGURATION
+# =============================================================================
+# Specify where to find the Python source code
+packages = [{ include = "cyberbullying_shared_common" }]
+
+# =============================================================================
+# DEPENDENCIES
+# =============================================================================
+[tool.poetry.dependencies]
+# Python version
+python = "^3.11"
+
+# Data validation and settings
+pydantic = "^2.5.0"
+pydantic-settings = "^2.1.0"
+
+# Environment variables
+python-dotenv = "^1.0.0"
+
+# Structured logging
+structlog = "^24.1.0"
+
+# Retry logic
+tenacity = "^8.2.0"
+
+# Caching
+cachetools = "^5.3.0"
+
+# Async support
+asyncio = "^0.21.0"
+
+# JSON handling
+orjson = "^3.9.0"
+
+# UUID generation
+uuid = { version = "^1.30", python = "^3.11" }
+
+# Datetime handling
+python-dateutil = "^2.8.0"
+
+# Type hints
+typing-extensions = "^4.9.0"
+
+# =============================================================================
+# DEV DEPENDENCIES
+# =============================================================================
+[tool.poetry.group.dev.dependencies]
+# Testing
+pytest = "^7.4.0"
+pytest-asyncio = "^0.21.0"
+pytest-cov = "^4.1.0"
+
+# Type checking
+mypy = "^1.8.0"
+
+# Code formatting
+black = "^23.12.0"
+isort = "^5.13.0"
+
+# Linting
+flake8 = "^7.0.0"
+
+# =============================================================================
+# BUILD SYSTEM
+# =============================================================================
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
