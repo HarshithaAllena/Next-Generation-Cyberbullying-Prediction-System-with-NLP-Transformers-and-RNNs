@@ -1,0 +1,305 @@
+# =============================================================================
+# CYBERBULLYING NLP MONOREPO - ROOT pyproject.toml
+# =============================================================================
+# Purpose: Root configuration for Poetry-based Python monorepo containing
+# all microservices for the Next-Generation Cyberbullying Prediction System.
+#
+# This monorepo uses Poetry's workspace feature to manage multiple Python
+# packages and services in a single repository.
+#
+# Architecture Overview:
+# - packages/: Shared libraries used across services
+#   - shared-common: Common utilities, decorators, helpers
+#   - ml-core: Core ML utilities, model architectures
+#   - data-models: Pydantic schemas, data validation
+# - apps/: Microservices (each is a runnable Python package)
+#   - api-gateway: Main entry point, routing, authentication
+#   - preprocessing-service: Text cleaning, normalization
+#   - feature-service: Embeddings, feature extraction
+#   - training-service: Model training pipeline
+#   - prediction-service: Inference, real-time prediction
+#   - explainability-service: XAI, attention visualization
+#   - model-registry: Model versioning, storage
+#   - monitoring-service: Metrics, health checks
+#
+# Key Features:
+# - NLP with Transformers (BERT, RoBERTa, DeBERTa)
+# - RNN implementations (LSTM, GRU, BiLSTM)
+# - Ensemble methods for robust predictions
+# - Explainable AI (SHAP, LIME, attention)
+# - MLflow experiment tracking
+# - Docker + Kubernetes deployment ready
+#
+# Author: Cyberbullying Prediction Team
+# Version: 1.0.0
+# =============================================================================
+
+# =============================================================================
+# POETRY CONFIGURATION
+# =============================================================================
+[tool.poetry]
+# Monorepo root name
+name = "cyberbullying-nlp-monorepo"
+# Version follows semantic versioning
+version = "1.0.0"
+# Project description
+description = "Next-Generation Cyberbullying Prediction with NLP and RNNs"
+# Authors
+authors = ["Cyberbullying Prediction Team <team@example.com>"]
+# License
+license = "MIT"
+# Readme file
+readme = "README.md"
+# Project homepage
+homepage = "https://github.com/cyberbullying-prediction/nlp-monorepo"
+# Repository
+repository = "https://github.com/cyberbullying-prediction/nlp-monorepo"
+# Documentation
+documentation = "https://docs.cyberbullying-prediction.com"
+# Keywords for package discovery
+keywords = [
+    "nlp",
+    "machine-learning",
+    "cyberbullying",
+    "rnn",
+    "transformers",
+    "bert",
+    "deep-learning",
+    "pytorch",
+    "tensorflow",
+]
+# Package classifiers
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Machine Learning",
+]
+
+# =============================================================================
+# WORKSPACE CONFIGURATION
+# =============================================================================
+# Poetry workspace - defines all packages in this monorepo
+[tool.poetry.workspace]
+# Shared virtualenv settings
+packages = [
+    # Shared packages - used by all services
+    { path = "packages/shared-common" },
+    { path = "packages/ml-core" },
+    { path = "packages/data-models" },
+    # Microservices - standalone API services
+    { path = "apps/api-gateway" },
+    { path = "apps/preprocessing-service" },
+    { path = "apps/feature-service" },
+    { path = "apps/training-service" },
+    { path = "apps/prediction-service" },
+    { path = "apps/explainability-service" },
+    { path = "apps/model-registry" },
+    { path = "apps/monitoring-service" },
+]
+
+# =============================================================================
+# BUILD SYSTEM
+# =============================================================================
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+# =============================================================================
+# GLOBAL SCRIPTS
+# =============================================================================
+# Custom scripts that can be run from root
+[tool.poetry.scripts]
+# Example: Custom commands for the monorepo
+# cyberbullying-train = "cyberbullying_nlp_core.cli:train"
+# cyberbullying-serve = "cyberbullying_nlp_core.cli:serve"
+
+# =============================================================================
+# DEVELOPMENT TOOLS
+# =============================================================================
+[tool.poetry.group.dev.dependencies]
+# Testing framework - pytest
+pytest = "^7.4.0"
+# Pytest configuration
+pytest-cov = "^4.1.0"
+# Async test support
+pytest-asyncio = "^0.21.0"
+# Mocking for tests
+pytest-mock = "^3.12.0"
+# Test timeout
+pytest-timeout = "^2.2.0"
+# Parallel test execution
+pytest-xdist = "^3.5.0"
+
+# Code formatting - Black
+black = "^23.12.0"
+# Import sorting - isort
+isort = "^5.13.0"
+# Linting - flake8
+flake8 = "^7.0.0"
+# Type checking - mypy
+mypy = "^1.8.0"
+# Additional linting
+pylint = "^3.0.0"
+# Pre-commit hooks
+pre-commit = "^3.6.0"
+
+# Jupyter support
+ipython = "^8.20.0"
+ipykernel = "^6.28.0"
+nbformat = "^5.9.0"
+nbconvert = "^7.12.0"
+
+# Performance profiling
+py-spy = "^0.3.14"
+memory-profiler = "^0.61.0"
+
+# Type stubs
+types-requests = "^2.31.0"
+types-python-dateutil = "^2.8.0"
+types-pyyaml = "^6.0.0"
+
+# =============================================================================
+# BLACK CONFIGURATION
+# =============================================================================
+[tool.black]
+# Maximum line length (PEP 8 recommends 79, but 100 is common)
+line-length = 100
+# Target Python version
+target-version = ["py311"]
+# Files to include
+include = '\.pyi?$'
+# Directories to exclude
+extend-exclude = '''
+/(
+    \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+  | __pycache__
+)/
+'''
+
+# =============================================================================
+# ISORT CONFIGURATION
+# =============================================================================
+[tool.isort]
+# Match Black's line length
+line_length = 100
+# Multi-line import mode
+multi_line_output = 3
+# Include trailing comma
+include_trailing_comma = true
+# Force single line
+force_single_line = false
+# Import sections
+sections = [
+    "FUTURE",
+    "STDLIB",
+    "THIRDPARTY",
+    "FIRSTPARTY",
+    "LOCAL",
+]
+
+# =============================================================================
+# MYPY CONFIGURATION
+# =============================================================================
+[tool.mypy]
+# Python version to check
+python_version = "3.11"
+# Warn on implicit Any
+warn_return_any = true
+# Warn on unused configs
+warn_unused_configs = true
+# Allow untyped definitions (flexibility)
+disallow_untyped_defs = false
+# Check untyped definitions
+check_untyped_defs = true
+# No implicit Optional
+no_implicit_optional = true
+# Warn on redundant casts
+warn_redundant_casts = true
+# Warn on unused ignores
+warn_unused_ignores = true
+# Strict equality
+strict_equality = true
+# Warn on unreachable
+warn_unreachable = true
+
+# =============================================================================
+# PYTEST CONFIGURATION
+# =============================================================================
+[tool.pytest.ini_options]
+# Test discovery
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+# Minimum version
+minversion = "7.0"
+# Options
+addopts = [
+    "-v",
+    "--strict-markers",
+    "--tb=short",
+    "--disable-warnings",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+    "--cov-report=xml",
+    "--cov-fail-under=80",
+]
+# Async mode
+asyncio_mode = "auto"
+
+# =============================================================================
+# COVERAGE CONFIGURATION
+# =============================================================================
+[tool.coverage.run]
+# Source to cover
+source = ["packages", "apps"]
+# Omit from coverage
+omit = [
+    "*/tests/*",
+    "*/test_*",
+    "*/__pycache__/*",
+    "*/.venv/*",
+    "*/venv/*",
+    "*/migrations/*",
+]
+
+[tool.coverage.report]
+# Exclude lines
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "@abstractmethod",
+    "@abc.abstractmethod",
+]
+
+# =============================================================================
+# PRE-COMMIT CONFIGURATION
+# =============================================================================
+[tool.pre-commit]
+# Default stages
+default_stages = ["pre-commit"]
+
+# =============================================================================
+# ENVIRONMENT REQUIREMENTS
+# =============================================================================
+# Python version requirement
+requires-python = ">=3.11"

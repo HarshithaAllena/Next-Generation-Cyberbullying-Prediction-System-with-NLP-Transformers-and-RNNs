@@ -1,0 +1,274 @@
+{
+  /*
+  =============================================================================
+  MONOREPO ROOT PACKAGE CONFIGURATION
+  =============================================================================
+  Purpose: Defines the monorepo structure using npm workspaces.
+  This allows multiple packages and applications to share dependencies
+  and be developed together in a single repository.
+  
+  Key Concepts:
+  - workspaces: Defines root-level package directories
+  - private: true ensures this is a monorepo root, not a publishable package
+  - scripts: Global scripts that can be run from root
+  
+  Author: Cyberbullying Prediction Team
+  Version: 1.0.0
+  =============================================================================
+  */
+  "name": "cyberbullying-nlp-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Next-Generation Cyberbullying Prediction System with NLP and RNNs",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    /*
+    =============================================================================
+    DEVELOPMENT SCRIPTS
+    =============================================================================
+    These scripts enable running services in development mode with hot reload.
+    Each service can be started independently or all together.
+    =============================================================================
+    */
+    "dev:preprocessing": "npm run dev --workspace=apps/preprocessing-service",
+    "dev:feature": "npm run dev --workspace=apps/feature-service",
+    "dev:training": "npm run dev --workspace=apps/training-service",
+    "dev:prediction": "npm run dev --workspace=apps/prediction-service",
+    "dev:explainability": "npm run dev --workspace=apps/explainability-service",
+    "dev:api": "npm run dev --workspace=apps/api-gateway",
+    "dev:monitoring": "npm run dev --workspace=apps/monitoring-service",
+    "dev:model-registry": "npm run dev --workspace=apps/model-registry",
+    "dev:all": "npm run dev --workspace=apps/*",
+    
+    /*
+    =============================================================================
+    BUILD SCRIPTS
+    =============================================================================
+    Production builds for each service and shared packages.
+    Creates optimized, minified bundles ready for deployment.
+    =============================================================================
+    */
+    "build": "npm run build --workspaces --if-present",
+    "build:preprocessing": "npm run build --workspace=apps/preprocessing-service",
+    "build:feature": "npm run build --workspace=apps/feature-service",
+    "build:training": "npm run build --workspace=apps/training-service",
+    "build:prediction": "npm run build --workspace=apps/prediction-service",
+    "build:explainability": "npm run build --workspace=apps/explainability-service",
+    "build:api": "npm run build --workspace=apps/api-gateway",
+    "build:monitoring": "npm run build --workspace=apps/monitoring-service",
+    "build:model-registry": "npm run build --workspace=apps/model-registry",
+    
+    /*
+    =============================================================================
+    TESTING SCRIPTS
+    =============================================================================
+    Comprehensive test suite running across all packages and services.
+    Uses Jest for unit tests and Supertest for integration tests.
+    =============================================================================
+    */
+    "test": "npm run test --workspaces --if-present",
+    "test:coverage": "npm run test:coverage --workspaces --if-present",
+    "test:watch": "npm run test:watch --workspaces --if-present",
+    "test:e2e": "npm run test:e2e --workspace=tests/integration",
+    
+    /*
+    =============================================================================
+    LINTING AND CODE QUALITY
+    =============================================================================
+    Ensures consistent code style across the monorepo.
+    Uses ESLint with TypeScript and Prettier for formatting.
+    =============================================================================
+    */
+    "lint": "eslint . --ext .ts,.js,.jsx,.tsx",
+    "lint:fix": "eslint . --ext .ts,.js,.jsx,.tsx --fix",
+    "format": "prettier --write \"**/*.{ts,js,tsx,jsx,json,md,yml}\"",
+    
+    /*
+    =============================================================================
+    DOCKER AND DEPLOYMENT
+    =============================================================================
+    Container management and deployment scripts.
+    Uses Docker Compose for local development.
+    =============================================================================
+    */
+    "docker:build": "docker-compose build",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f",
+    "docker:clean": "docker-compose down -v --rmi local",
+    
+    /*
+    =============================================================================
+    DATABASE AND MIGRATIONS
+    =============================================================================
+    Database management scripts for migrations and seeding.
+    Uses Prisma for database operations.
+    =============================================================================
+    */
+    "db:migrate": "npm run db:migrate --workspace=apps/api-gateway",
+    "db:seed": "npm run db:seed --workspace=apps/api-gateway",
+    "db:reset": "npm run db:reset --workspace=apps/api-gateway",
+    
+    /*
+    =============================================================================
+    HELPER SCRIPTS
+    =============================================================================
+    Miscellaneous utility scripts for development and maintenance.
+    =============================================================================
+    */
+    "clean": "rm -rf node_modules packages/*/node_modules apps/*/node_modules",
+    "clean:builds": "rm -rf packages/*/dist apps/*/dist",
+    "typecheck": "tsc --noEmit --project ./tsconfig.json",
+    "dependency:check": "npm outdated --workspaces --depth=0"
+  },
+  
+  /*
+  =============================================================================
+  DEVELOPMENT TOOLS CONFIGURATION
+  =============================================================================
+  Dev dependencies shared across the monorepo.
+  Version compatibility is critical - all tools should be compatible.
+  =============================================================================
+  */
+  "devDependencies": {
+    /*
+    =============================================================================
+    TYPESCRIPT COMPILER AND TOOLS
+    =============================================================================
+    TypeScript provides static type checking for JavaScript.
+    Essential for catching errors before runtime in large codebases.
+    =============================================================================
+    */
+    "@types/jest": "^29.5.12",
+    "@types/node": "^20.11.0",
+    "@types/supertest": "^6.0.2",
+    "typescript": "^5.3.3",
+    
+    /*
+    =============================================================================
+    TESTING FRAMEWORKS
+    =============================================================================
+    Jest: Complete testing framework for unit and integration tests.
+    Supertest: HTTP assertions for API integration testing.
+    =============================================================================
+    */
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.2",
+    "supertest": "^6.3.4",
+    
+    /*
+    =============================================================================
+    CODE QUALITY TOOLS
+    =============================================================================
+    ESLint: Linting for identifying problematic patterns.
+    Prettier: Code formatter for consistent style.
+    Husky: Git hooks for pre-commit validation.
+    =============================================================================
+    */
+    "@typescript-eslint/eslint-plugin": "^6.19.0",
+    "@typescript-eslint/parser": "^6.19.0",
+    "eslint": "^8.56.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.1.3",
+    "prettier": "^3.2.4",
+    "husky": "^8.0.3",
+    "lint-staged": "^15.2.0",
+    
+    /*
+    =============================================================================
+    BUILD TOOLS
+    =============================================================================
+    Turbo: Monorepo build system for optimized caching and parallelism.
+    ts-node: Execute TypeScript directly without compilation.
+    =============================================================================
+    */
+    "turbo": "^1.12.4",
+    "ts-node": "^10.9.2",
+    "concurrently": "^8.2.2",
+    
+    /*
+    =============================================================================
+    ENVIRONMENT MANAGEMENT
+    =============================================================================
+    dotenv: Loads environment variables from .env files.
+    =============================================================================
+    */
+    "dotenv": "^16.3.1"
+  },
+  
+  /*
+  =============================================================================
+  ENGINES AND COMPATIBILITY
+  =============================================================================
+  Specifies Node.js and npm version requirements.
+  Ensures consistent development environment across team.
+  =============================================================================
+  */
+  "engines": {
+    "node": ">=20.11.0",
+    "npm": ">=10.2.4"
+  },
+  
+  /*
+  =============================================================================
+  GIT HOOKS CONFIGURATION
+  =============================================================================
+  Husky Git hooks for pre-commit validation.
+  Runs linting and tests before code is committed.
+  =============================================================================
+  */
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  
+  /*
+  =============================================================================
+  LINT-STAGED CONFIGURATION
+  =============================================================================
+  Runs specific linters on staged files only.
+  Optimizes pre-commit performance by checking only changed files.
+  =============================================================================
+  */
+  "lint-staged": {
+    "*.{ts,js,tsx,jsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,yml}": [
+      "prettier --write"
+    ]
+  },
+  
+  /*
+  =============================================================================
+    TURBO MONOREPO CONFIGURATION
+    =============================================================================
+    Turbo configuration for task scheduling and caching.
+    Enables efficient parallel execution and build caching.
+    =============================================================================
+  */
+  "turbo": {
+    "pipeline": {
+      "build": {
+        "dependsOn": ["^build"],
+        "outputs": ["dist/**", ".next/**"]
+      },
+      "test": {
+        "dependsOn": ["^build"],
+        "outputs": ["coverage/**"]
+      },
+      "lint": {
+        "outputs": []
+      },
+      "dev": {
+        "cache": false,
+        "persistent": true
+      }
+    }
+  }
+}

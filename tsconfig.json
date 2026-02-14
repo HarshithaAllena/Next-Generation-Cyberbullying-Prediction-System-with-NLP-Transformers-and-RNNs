@@ -1,0 +1,226 @@
+# =============================================================================
+# TYPESCRIPT COMPILER CONFIGURATION
+# =============================================================================
+# Purpose: TypeScript compiler configuration for the entire monorepo.
+# This base config is extended by each package and service.
+#
+# Key Concepts:
+# - extends: Inherits configuration from base configs
+# - compilerOptions: TypeScript compiler settings
+# - include/exclude: Specifies which files to compile
+#
+# Author: Cyberbullying Prediction Team
+# Version: 1.0.0
+# =============================================================================
+
+{
+  /*
+  =============================================================================
+  COMPILER OPTIONS - CORE SETTINGS
+  =============================================================================
+  These options control fundamental TypeScript compilation behavior.
+  Essential for type safety and JavaScript output generation.
+  =============================================================================
+  */
+  "compilerOptions": {
+    /*
+    =============================================================================
+    OUTPUT AND TARGET CONFIGURATION
+    =============================================================================
+    target: JavaScript version to compile to.
+           ES2022 provides modern features while maintaining compatibility.
+    module: Module system for output JavaScript.
+           NodeNext enables ES modules with .js extensions.
+    lib: TypeScript's built-in type definitions.
+         Includes modern features like Promise, async/await.
+    =============================================================================
+    */
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": ["ES2022"],
+    
+    /*
+    =============================================================================
+    DIRECTORY AND FILE HANDLING
+    =============================================================================
+    outDir: Directory for compiled JavaScript output.
+    rootDir: Root directory of source files.
+    baseUrl: Base directory for non-relative module resolution.
+    =============================================================================
+    */
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "baseUrl": ".",
+    
+    /*
+    =============================================================================
+    EMIT AND GENERATION
+    =============================================================================
+    emitDeclarationOnly: Generate .d.ts files only, no JavaScript.
+                         Essential for library packages.
+    declaration: Generate TypeScript declaration files.
+    declarationMap: Generate source maps for declarations.
+    sourceMap: Generate JavaScript source maps for debugging.
+    =============================================================================
+    */
+    "emitDeclarationOnly": false,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    
+    /*
+    =============================================================================
+    CODE QUALITY AND STRICTNESS
+    =============================================================================
+    Strict mode enables all strict type-checking options.
+    Essential for catching bugs early in development.
+    =============================================================================
+    */
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+    
+    /*
+    =============================================================================
+    ADDITIONAL CHECKING AND LINTING
+    =============================================================================
+    These options catch common mistakes and enforce best practices.
+    noUnusedLocals: Error on unused local variables.
+    noUnusedParameters: Error on unused function parameters.
+    noImplicitReturns: Error if function doesn't return expected type.
+    noFallthroughCasesInSwitch: Error on fallthrough cases.
+    =============================================================================
+    */
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    
+    /*
+    =============================================================================
+    MODULE RESOLUTION
+    =============================================================================
+    Allows synthetic default imports from modules without default exports.
+    Essential for compatibility with some JavaScript libraries.
+    =============================================================================
+    */
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    
+    /*
+    =============================================================================
+    EXPERIMENTAL FEATURES
+    =============================================================================
+    Enables experimental features that may become standard.
+    Use with caution in production environments.
+    =============================================================================
+    */
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    
+    /*
+    =============================================================================
+    SKIP LIB CHECK
+    =============================================================================
+    Skip type checking of declaration files (.d.ts).
+    Significantly speeds up compilation for large projects.
+    =============================================================================
+    */
+    "skipLibCheck": true,
+    
+    /*
+    =============================================================================
+    INCREMENTAL COMPILATION
+    =============================================================================
+    Enable incremental compilation for faster builds.
+    Caches type information between compilations.
+    =============================================================================
+    */
+    "incremental": true,
+    
+    /*
+    =============================================================================
+    PATH MAPPING
+    =============================================================================
+    Create aliases for module paths to simplify imports.
+    Enables cleaner import statements throughout the project.
+    =============================================================================
+    */
+    "paths": {
+      /*
+      =============================================================================
+      SHARED PACKAGE ALIASES
+      =============================================================================
+      These aliases allow services to import shared packages using
+      simplified paths instead of relative imports.
+      =============================================================================
+      */
+      "@cyberbullying/shared-common": ["./packages/shared-common/src/index.ts"],
+      "@cyberbullying/data-models": ["./packages/data-models/src/index.ts"],
+      "@cyberbullying/ml-core": ["./packages/ml-core/src/index.ts"],
+      "@cyberbullying/test-utils": ["./packages/test-utils/src/index.ts"],
+      
+      /*
+      =============================================================================
+      APPLICATION ALIASES
+      =============================================================================
+      Cross-service imports for inter-service communication.
+      =============================================================================
+      */
+      "@apps/api-gateway/*": ["./apps/api-gateway/src/*"],
+      "@apps/preprocessing-service/*": ["./apps/preprocessing-service/src/*"],
+      "@apps/feature-service/*": ["./apps/feature-service/src/*"],
+      "@apps/training-service/*": ["./apps/training-service/src/*"],
+      "@apps/prediction-service/*": ["./apps/prediction-service/src/*"],
+      "@apps/explainability-service/*": ["./apps/explainability-service/src/*"],
+      "@apps/model-registry/*": ["./apps/model-registry/src/*"],
+      "@apps/monitoring-service/*": ["./apps/monitoring-service/src/*"]
+    }
+  },
+  
+  /*
+  =============================================================================
+  INCLUDE AND EXCLUDE FILES
+  =============================================================================
+  Specifies which files to include in compilation.
+  Excludes test files, node_modules, and build outputs.
+  =============================================================================
+  */
+  "include": [
+    "packages/**/src/**/*.ts",
+    "apps/**/src/**/*.ts",
+    "scripts/**/*.ts",
+    "tests/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build",
+    "coverage",
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "**/__tests__",
+    "**/__mocks__"
+  ],
+  
+  /*
+  =============================================================================
+  TYPE DEFINITION FILES
+  =============================================================================
+  Include type definitions for Node.js and other libraries.
+  =============================================================================
+  */
+  "typeRoots": [
+    "./node_modules/@types",
+    "./packages/**/src/types"
+  ]
+}

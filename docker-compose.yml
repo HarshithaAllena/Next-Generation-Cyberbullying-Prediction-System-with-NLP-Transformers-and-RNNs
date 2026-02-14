@@ -1,0 +1,732 @@
+# =============================================================================
+# DOCKER COMPOSE CONFIGURATION
+# =============================================================================
+# Purpose: Defines the complete local development and production environment
+# for the Cyberbullying Prediction System using Docker containers.
+#
+# This configuration enables:
+# - Local development with hot reload
+# - Service isolation for debugging
+# - Environment variable management
+# - Volume mounting for development
+# - Health checks for service readiness
+# - Networking between services
+#
+# Usage:
+#   docker-compose up -d          # Start all services
+#   docker-compose up -d <service> # Start specific service
+#   docker-compose logs -f        # View logs
+#   docker-compose down           # Stop all services
+#   docker-compose down -v        # Stop and remove volumes
+#
+# Author: Cyberbullying Prediction Team
+# Version: 1.0.0
+# =============================================================================
+
+# =============================================================================
+# DOCKER COMPOSE VERSION
+# =============================================================================
+# Use latest version for modern features.
+# Version 3.x supports all current Docker features.
+# =============================================================================
+version: '3.9'
+
+# =============================================================================
+# SERVICES CONFIGURATION
+# =============================================================================
+# Defines all containers that make up the application.
+# Each service represents a microservice in the architecture.
+# =============================================================================
+services:
+
+  # ============================================================================
+  # API GATEWAY SERVICE
+  # ============================================================================
+  # Entry point for all client requests.
+  # Handles routing, authentication, rate limiting, and request validation.
+  # Port: 3000
+  # ============================================================================
+  api-gateway:
+    # Build configuration for the API Gateway service.
+    build:
+      context: ./apps/api-gateway
+      dockerfile: Dockerfile
+      target: development
+    # Container name for easy reference.
+    container_name: cyberbullying-api-gateway
+    # Environment variables for configuration.
+    # These can be overridden in production via .env files.
+    environment:
+      # Node environment (development, staging, production)
+      NODE_ENV: development
+      # Port for the API Gateway to listen on.
+      PORT: 3000
+      # Service URLs for internal communication.
+      # Uses Docker DNS for service discovery.
+      PREPROCESSING_SERVICE_URL: http://preprocessing-service:3001
+      FEATURE_SERVICE_URL: http://feature-service:3002
+      PREDICTION_SERVICE_URL: http://prediction-service:3003
+      TRAINING_SERVICE_URL: http://training-service:3004
+      EXPLAINABILITY_SERVICE_URL: http://explainability-service:3005
+      MODEL_REGISTRY_URL: http://model-registry:3006
+      MONITORING_SERVICE_URL: http://monitoring-service:3007
+      # Database connection string.
+      DATABASE_URL: postgresql://cyberbullying:password@postgres:5432/cyberbullying
+      # Redis connection for caching and session management.
+      REDIS_URL: redis://redis:6379
+      # JWT secret for authentication token signing.
+      JWT_SECRET: ${JWT_SECRET:-development-secret-key-change-in-production}
+      # CORS allowed origins (comma-separated).
+      CORS_ORIGINS: http://localhost:3000,http://localhost:5173
+      # Log level for the application.
+      LOG_LEVEL: debug
+      # Rate limiting configuration.
+      RATE_LIMIT_MAX: 100
+      RATE_LIMIT_WINDOW_MS: 60000
+    # Port mapping: host:container
+    ports:
+      - "3000:3000"
+    # Volume mounting for hot reload during development.
+    # Mounts source code so changes are reflected immediately.
+    volumes:
+      - ./apps/api-gateway/src:/app/src:ro
+      - ./apps/api-gateway/package.json:/app/package.json:ro
+    # Dependencies that must start before this service.
+    # Ensures database and cache are available before API starts.
+    depends_on:
+      # Wait for PostgreSQL to be healthy before starting.
+      postgres:
+        condition: service_healthy
+      # Wait for Redis to be healthy before starting.
+      redis:
+        condition: service_healthy
+    # Health check to verify service is running correctly.
+    healthcheck:
+      # HTTP endpoint to check for health.
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+      # Interval between health checks (30 seconds).
+      interval: 30s
+      # Timeout for each health check (10 seconds).
+      timeout: 10s
+      # Number of retries before marking as unhealthy (3).
+      retries: 3
+      # Initial delay before first health check (10 seconds).
+      start_period: 10s
+    # Networks this service belongs to.
+    # Enables communication with other services.
+    networks:
+      - cyberbullying-network
+    # Restart policy for container management.
+    # Always restart unless manually stopped.
+    restart: unless-stopped
+
+  # ============================================================================
+  # PREPROCESSING SERVICE
+  # ============================================================================
+  # Handles text preprocessing, data cleaning, and normalization.
+  # Port: 3001
+  # ============================================================================
+  preprocessing-service:
+    build:
+      context: ./apps/preprocessing-service
+      dockerfile: Dockerfile
+      target: development
+    container_name: cyberbullying-preprocessing
+    environment:
+      NODE_ENV: development
+      PORT: 3001
+      # Service-specific configuration.
+      # Maximum text length to process.
+      MAX_TEXT_LENGTH: 10000
+      # Supported languages for preprocessing.
+      SUPPORTED_LANGUAGES: en,es,fr,de
+      # Enable text normalization.
+      ENABLE_NORMALIZATION: "true"
+      # Minimum text length after cleaning.
+      MIN_TEXT_LENGTH: 3
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./apps/preprocessing-service/src:/app/src:ro
+      - ./apps/preprocessing-service/package.json:/app/package.json:ro
+      # Mount shared packages for development.
+      - ./packages/shared-common:/app/node_modules/@cyberbullying/shared-common:ro
+      - ./packages/data-models:/app/node_modules/@cyberbullying/data-models:ro
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - cyberbullying-network
+    restart: unless-stopped
+
+  # ============================================================================
+  # FEATURE SERVICE
+  # ============================================================================
+  # Handles feature extraction, embeddings, and text representation.
+  # Port: 3002
+  # ============================================================================
+  feature-service:
+    build:
+      context: ./apps/feature-service
+      dockerfile: Dockerfile
+      target: development
+    container_name: cyberbullying-feature
+    environment:
+      NODE_ENV: development
+      PORT: 3002
+      # Embedding model configuration.
+      EMBEDDING_MODEL: sentence-transformers/all-MiniLM-L6-v2
+      # Maximum sequence length for embeddings.
+      MAX_SEQ_LENGTH: 512
+      # Batch size for embedding generation.
+      EMBEDDING_BATCH_SIZE: 32
+      # Enable GPU acceleration if available.
+      USE_GPU: "false"
+      # Cache embeddings for faster processing.
+      ENABLE_EMBEDDING_CACHE: "true"
+    ports:
+      - "3002:3002"
+    volumes:
+      - ./apps/feature-service/src:/app/src:ro
+      - ./apps/feature-service/package.json:/app/package.json:ro
+      - ./packages/shared-common:/app/node_modules/@cyberbullying/shared-common:ro
+      - ./packages/data-models:/app/node_modules/@cyberbullying/data-models:ro
+      - ./packages/ml-core:/app/node_modules/@cyberbullying/ml-core:ro
+      # Cache directory for embeddings.
+      - embedding-cache:/app/.cache
+    depends_on:
+      preprocessing-service:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - cyberbullying-network
+    restart: unless-stopped
+
+  # ============================================================================
+  # PREDICTION SERVICE
+  # ============================================================================
+  # Handles real-time inference and batch predictions.
+  # Port: 3003
+  # ============================================================================
+  prediction-service:
+    build:
+      context: ./apps/prediction-service
+      dockerfile: Dockerfile
+      target: development
+    container_name: cyberbullying-prediction
+    environment:
+      NODE_ENV: development
+      PORT: 3003
+      # Model configuration.
+      DEFAULT_MODEL_VERSION: latest
+      # Inference settings.
+      MAX_BATCH_SIZE: 64
+      INFERENCE_TIMEOUT_MS: 5000
+      # Enable model caching.
+      ENABLE_MODEL_CACHE: "true"
+      # Confidence threshold for predictions.
+      CONFIDENCE_THRESHOLD: 0.5
+    ports:
+      - "3003:3003"
+    volumes:
+      - ./apps/prediction-service/src:/app/src:ro
+      - ./apps/prediction-service/package.json:/app/package.json:ro
+      - ./packages/shared-common:/app/node_modules/@cyberbullying/shared-common:ro
+      - ./packages/data-models:/app/node_modules/@cyberbullying/data-models:ro
+      - ./packages/ml-core:/app/node_modules/@cyberbullying/ml-core:ro
+      # Model storage directory.
+      - model-storage:/app/models
+    depends_on:
+      feature-service:
+        condition: service_started
+      model-registry:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3003/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - cyberbullying-network
+    restart: unless-stopped
+
+  # ============================================================================
+  # TRAINING SERVICE
+  # ============================================================================
+  # Handles model training, evaluation, and experiment tracking.
+  # Port: 3004
+  # ============================================================================
+  training-service:
+    build:
+      context: ./apps/training-service
+      dockerfile: Dockerfile
+      target: development
+    container_name: cyberbullying-training
+    environment:
+      NODE_ENV: development
+      PORT: 3004
+      # Training configuration.
+      DEFAULT_EPOCHS: 10
+      DEFAULT_BATCH_SIZE: 32
+      LEARNING_RATE: 0.001
+      # Experiment tracking.
+      ENABLE_MLFLOW: "true"
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      # GPU configuration.
+      CUDA_VISIBLE_DEVICES: "0"
+      # Dataset configuration.
+      TRAIN_DATA_PATH: /app/data/datasets
+      # Checkpoint directory.
+      CHECKPOINT_DIR: /app/checkpoints
+    ports:
+      - "3004:3004"
+    volumes:
+      - ./apps/training-service/src:/app/src:ro
+      - ./apps/training-service/package.json:/app/package.json:ro
+      - ./packages/shared-common:/app/node_modules/@cyberbullying/shared-common:ro
+      - ./packages/data-models:/app/node_modules/@cyberbullying/data-models:ro
+      - ./packages/ml-core:/app/node_modules/@cyberbullying/ml-core:ro
+      # Mount dataset directory.
+      - ./datasets:/app/data/datasets:ro
+      # Checkpoint storage.
+      - checkpoint-storage:/app/checkpoints
+    depends_on:
+      feature-service:
+        condition: service_started
+      mlflow:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3004/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - cyberbullying-network
+    restart: unless-stopped
+
+  # ============================================================================
+  # EXPLAINABILITY SERVICE
+  # ============================================================================
+  # Handles model interpretability, attention visualization, and explanations.
+  # Port: 3005
+  # ============================================================================
+  explainability-service:
+    build:
+      context: ./apps/explainability-service
+      dockerfile: Dockerfile
+      target: development
+    container_name: cyberbullying-explainability
+    environment:
+      NODE_ENV: development
+      PORT: 3005
+      # Explainability configuration.
+      ENABLE_LIME: "true"
+      ENABLE_SHAP: "true"
+      # Visualization settings.
+      ATTENTION_VISUALIZATION: "true"
+      # Number of samples for LIME explanations.
+      LIME_SAMPLES: 1000
+      # SHAP background samples.
+      SHAP_BACKGROUND_SAMPLES: 100
+    ports:
+      - "3005:3005"
+    volumes:
+      - ./apps/explainability-service/src:/app/src:ro
+      - ./apps/explainability-service/package.json:/app/package.json:ro
+      - ./packages/shared-common:/app/node_modules/@cyberbullying/shared-common:ro
+      - ./packages/data-models:/app/node_modules/@cyberbullying/data-models:ro
+      - ./packages/ml-core:/app/node_modules/@cyberbullying/ml-core:ro
+    depends_on:
+      prediction-service:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3005/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    networks:
+      - cyberbullying-network
+    restart: unless-stopped
+
+  # ============================================================================
+  # MODEL REGISTRY SERVICE
+  # ============================================================================
+  # Handles model versioning, storage, and metadata management.
+  # Port: 3006
+  # ============================================================================
+  model-registry:
+    build:
+      context: ./apps/model-registry
+      dockerfile: Dockerfile
+      target: development
+    container_name: cyberbullying-model-registry
+    environment:
+      NODE_ENV: development
+      PORT: 3006
+      # Storage configuration.
+      MODEL_STORAGE_PATH: /app/models
+      # Database for metadata.
+      DATABASE_URL: postgresql://cyberbullying:password@postgres:5432/cyberbullying
+      # MinIO configuration for S3-compatible storage.
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+      MINIO_BUCKET: models
+      MINIO_SECURE: "false"
+    ports:
+      - "3006:3006"
+    volumes:
+      - ./apps/model-registry/src:/app/src:ro
+      - ./apps/model-registry/package.json:/app/package.json:ro
+      - ./packages/shared-common:/app/node_modules/@cyberbullying/shared-common:ro
+      - ./packages/data-models:/app/node_modules/@cyberbullying/data-models:ro
+      # Model storage.
+      - model-storage:/app/models
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3006/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    networks:
+      - cyberbullying-network
+    restart: unless-stopped
+
+  # ============================================================================
+  # MONITORING SERVICE
+  # ============================================================================
+  # Handles metrics collection, health checks, and observability.
+  # Port: 3007
+  # ============================================================================
+  monitoring-service:
+    build:
+      context: ./apps/monitoring-service
+      dockerfile: Dockerfile
+      target: development
+    container_name: cyberbullying-monitoring
+    environment:
+      NODE_ENV: development
+      PORT: 3007
+      # Metrics configuration.
+      METRICS_PORT: 9090
+      # Prometheus scrape interval.
+      SCRAPE_INTERVAL: 15s
+      # Log aggregation.
+      LOG_AGGREGATION_ENABLED: "true"
+    ports:
+      - "3007:3007"
+      - "9090:9090"
+    volumes:
+      - ./apps/monitoring-service/src:/app/src:ro
+      - ./apps/monitoring-service/package.json:/app/package.json:ro
+      - ./packages/shared-common:/app/node_modules/@cyberbullying/shared-common:ro
+      - ./packages/data-models:/app/node_modules/@cyberbullying/data-models:ro
+    depends_on:
+      prometheus:
+        condition: service_started
+      grafana:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3007/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - cyberbullying-network
+    restart: unless-stopped
+
+  # ============================================================================
+  # POSTGRESQL DATABASE
+  # ============================================================================
+  # Relational database for persistent storage.
+  # Stores metadata, user data, predictions, and model information.
+  # Port: 5432
+  # ============================================================================
+  postgres:
+    # Official PostgreSQL Docker image.
+    image: postgres:15-alpine
+    container_name: cyberbullying-postgres
+    environment:
+      # Database name.
+      POSTGRES_DB: cyberbullying
+      # Database user.
+      POSTGRES_USER: cyberbullying
+      # Database password (should be changed in production).
+      POSTGRES_PASSWORD: password
+      # Default encoding.
+      POSTGRES_INITDB_ARGS: --encoding=UTF-8 --locale=C
+    ports:
+      - "5432:5432"
+    # Named volume for persistent data storage.
+    # Data persists across container restarts.
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      # Mount initialization scripts.
+      - ./infrastructure/database/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      # Check PostgreSQL is accepting connections.
+      test: ["CMD-SHELL", "pg_isready -U cyberbullying -d cyberbullying"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - cyberbullying-network
+    restart: unless-stopped
+
+  # ============================================================================
+  # REDIS CACHE
+  # ============================================================================
+  # In-memory data structure store for caching and message brokering.
+  # Used for: prediction caching, session management, rate limiting.
+  # Port: 6379
+  # ============================================================================
+  redis:
+    # Official Redis Docker image with Redis Stack for advanced features.
+    image: redis:7-alpine
+    container_name: cyberbullying-redis
+    command: >
+      redis-server
+      --appendonly yes
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      # Check Redis is responding to PING command.
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    networks:
+      - cyberbullying-network
+    restart: unless-stopped
+
+  # ============================================================================
+  # MINIO OBJECT STORAGE
+  # ============================================================================
+  # S3-compatible object storage for model files and artifacts.
+  # Alternative to AWS S3 for local development.
+  # Ports: 9000 (API), 9001 (Console)
+  # ============================================================================
+  minio:
+    # Official MinIO Docker image.
+    image: minio/minio:latest
+    container_name: cyberbullying-minio
+    command: server /data --console-address ":9001"
+    environment:
+      # MinIO root credentials (change in production).
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      # Check MinIO is running.
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+      start_period: 30s
+    networks:
+      - cyberbullying-network
+    restart: unless-stopped
+
+  # ============================================================================
+  # MLFLOW TRACKING SERVER
+  # ============================================================================
+  # Open-source platform for ML lifecycle: experimentation, reproducibility, deployment.
+  # Used for tracking training experiments, model versioning, and deployment.
+  # Port: 5000
+  # ============================================================================
+  mlflow:
+    # Official MLflow Docker image.
+    image: ghcr.io/mlflow/mlflow:latest
+    container_name: cyberbullying-mlflow
+    command: >
+      mlflow server
+      --host 0.0.0.0
+      --port 5000
+      --backend-store-uri postgresql://cyberbullying:password@postgres:5432/cyberbullying
+      --default-artifact-root s3://models/
+      --serve-artifacts
+    environment:
+      # AWS S3 configuration for artifact storage (using MinIO).
+      AWS_ACCESS_KEY_ID: minioadmin
+      AWS_SECRET_ACCESS_KEY: minioadmin
+      AWS_ENDPOINT_URL: http://minio:9000
+      AWS_REGION: us-east-1
+      MLFLOW_S3_ENDPOINT_URL: http://minio:9000
+    ports:
+      - "5000:5000"
+    volumes:
+      - mlflow-data:/mlflow
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    networks:
+      - cyberbullying-network
+    restart: unless-stopped
+
+  # ============================================================================
+  # PROMETHEUS METRICS
+  # ============================================================================
+  # Open-source systems monitoring and alerting toolkit.
+  # Collects metrics from services for monitoring and alerting.
+  # Port: 9090
+  # ============================================================================
+  prometheus:
+    # Official Prometheus Docker image.
+    image: prom/prometheus:latest
+    container_name: cyberbullying-prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--storage.tsdb.retention.time=30d'
+    ports:
+      - "9090:9090"
+    volumes:
+      # Mount Prometheus configuration.
+      - ./infrastructure/monitoring/prometheus:/etc/prometheus:ro
+      # Persistent storage for time-series data.
+      - prometheus-data:/prometheus
+    networks:
+      - cyberbullying-network
+    restart: unless-stopped
+
+  # ============================================================================
+  # GRAFANA DASHBOARDS
+  # ============================================================================
+  # Open-source analytics and monitoring solution.
+  # Visualizes metrics from Prometheus and other data sources.
+  # Port: 3001 (internal: 3000)
+  # ============================================================================
+  grafana:
+    # Official Grafana Docker image.
+    image: grafana/grafana:latest
+    container_name: cyberbullying-grafana
+    environment:
+      # Grafana configuration.
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      # Prometheus data source URL.
+      GF_DATASOURCES_PROMETHEUS_URL: http://prometheus:9090
+    ports:
+      - "3001:3000"
+    volumes:
+      # Mount dashboards and provisioning configuration.
+      - ./infrastructure/monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./infrastructure/monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+      # Persistent storage for dashboards.
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - cyberbullying-network
+    restart: unless-stopped
+
+# =============================================================================
+# VOLUMES CONFIGURATION
+# =============================================================================
+# Named volumes for persistent data storage across container restarts.
+# Each volume serves a specific purpose in the architecture.
+# =============================================================================
+volumes:
+  # PostgreSQL database data.
+  postgres-data:
+    driver: local
+  # Redis cache data with AOF persistence.
+  redis-data:
+    driver: local
+  # MinIO object storage data.
+  minio-data:
+    driver: local
+  # MLflow tracking server data.
+  mlflow-data:
+    driver: local
+  # Prometheus time-series data.
+  prometheus-data:
+    driver: local
+  # Grafana dashboards and configuration.
+  grafana-data:
+    driver: local
+  # Cached embeddings for faster processing.
+  embedding-cache:
+    driver: local
+  # Trained model files.
+  model-storage:
+    driver: local
+  # Model checkpoints during training.
+  checkpoint-storage:
+    driver: local
+
+# =============================================================================
+# NETWORKS CONFIGURATION
+# =============================================================================
+# Docker networks for service isolation and communication.
+# All services communicate through this network.
+# =============================================================================
+networks:
+  # Main network for all application services.
+  cyberbullying-network:
+    # Use bridge driver for container communication.
+    driver: bridge
+    # Enable IPv6 support (optional).
+    enable_ipv6: false
+    # Network IPAM configuration.
+    ipam:
+      driver: default
+      config:
+        # Subnet for Docker network.
+        - subnet: 172.28.0.0/16
+
+# =============================================================================
+# NOTES
+# =============================================================================
+# 1. To add a new service:
+#    - Add service definition under 'services'
+#    - Add volume mounts if needed
+#    - Add to networks if communication needed
+#
+# 2. For production deployment:
+#    - Use environment variables for secrets
+#    - Enable HTTPS/TLS
+#    - Configure proper logging
+#    - Set up backup strategies
+#    - Use Kubernetes for orchestration
+#
+# 3. For scaling:
+#    - Use Docker Swarm or Kubernetes
+#    - Configure load balancing
+#    - Set up horizontal pod autoscaling
+# =============================================================================
