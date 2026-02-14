@@ -1,0 +1,83 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Private/Local files
+*.env
+.env.local
+.env.*.local
+credentials.json
+*.pem
+*.key
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project specific - DO NOT COMMIT
+output/
+logs/
+*.log
+temp/
+tmp/
+
+# Model files (large)
+*.pth
+*.pt
+*.h5
+*.ckpt
+models/
+
+# Data files (if large)
+*.csv (if large, add specific names)
+data/
+datasets/
+archive/
+
+# Poetry
+poetry.lock
+
+# Node
+node_modules/
+package-lock.json
+
+# Frontend
+web/dist/
+web/node_modules/
